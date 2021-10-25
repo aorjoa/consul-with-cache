@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"gitdev.inno.ktb/mfoa/share-pkg/errs.git"
+	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/consul/api"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
@@ -142,4 +143,20 @@ func (c *Consul) get(key string) (string, error) {
 	c.Cache.Set(key, string(pair.Value), cache.DefaultExpiration)
 
 	return string(pair.Value), nil
+}
+
+func ExtractConsulerFromGinCTX(c *gin.Context) Consuler {
+	v, found := c.Get(ConsulCTXKey)
+	if !found {
+		return defaultCS
+	}
+	cs, _ := v.(Consuler)
+	return cs
+}
+
+func Middleware(cs Consuler) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set(ConsulCTXKey, cs)
+		c.Next()
+	}
 }
