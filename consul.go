@@ -2,6 +2,7 @@ package consul
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -108,6 +109,18 @@ func (c *Consul) Duration(key string) (time.Duration, error) {
 	}
 
 	return d, nil
+}
+
+func (c *Consul) GetMapErrCode(key string) (map[string]errs.Response, error) {
+	m := map[string]errs.Response{}
+	s, err := c.get(key)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal([]byte(s), &m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *Consul) get(key string) (string, error) {
